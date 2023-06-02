@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Modified Dinosaur Game</title>
+    <style>
+        #gameCanvas {
+            background-color: #f7f7f7;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+        }
+
+        #playAgainButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="150"></canvas>
+    <div id="gameOverScreen">
+        <p>Game Over! Your score: <span id="scoreDisplay"></span></p>
+        <button id="playAgainButton">Play Again</button>
+    </div>
+    <script>
+        // Setup canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Dinosaur variables
+        let dinoX = 50;
+        let dinoY = canvas.height - 50;
+        let dinoWidth = 50;
+        let dinoHeight = 50;
+        let dinoJump = false;
+        let jumpTimer = null;
+        
+        // Obstacle variables
+        let obstacleX = canvas.width;
+        let obstacleY = canvas.height - dinoHeight;
+        let obstacleWidth = 20;
+        let obstacleHeight = 50;
+        
+        // Game variables
+        let score = 0;
+        let gameSpeed = 3;
+        let gameOver = false;
+        
+        // Game over screen elements
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const playAgainButton = document.getElementById('playAgainButton');
+        
+        // Event listeners
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('touchstart', handleTouchStart);
+        playAgainButton.addEventListener('click', playAgain);
+        
+        function handleKeyDown(event) {
+            if (!gameOver && (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW')) {
+                jump();
+            }
+        }
+        
+        function handleTouchStart() {
+            if (!gameOver) {
+                jump();
+            }
+        }
+        
+        function jump() {
+            if (!dinoJump) {
+                dinoJump = true;
+                let jumpHeight = 100;
+                let jumpDuration = 500;
+                let jumpInterval = 10;
+                let totalFrames = jumpDuration / jumpInterval;
+                let frameCount = 0;
+                clearInterval(jumpTimer);
+                jumpTimer = setInterval(function() {
+                    frameCount++;
+                    if (frameCount <= totalFrames / 2) {
+                        dinoY -= jumpHeight / (totalFrames / 2);
+                    } else if (frameCount <= totalFrames) {
+                        dinoY += jumpHeight / (totalFrames / 2);
+                    } else {
+                        clearInterval(jumpTimer);
+                        dinoJump = false;
+                    }
+                }, jumpInterval);
+            }
+        }
+        
+        function drawDinosaur() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(dinoX, dinoY, dinoWidth, dinoHeight);
+        }
+        
+        function drawObstacle() {
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(obstacleX, obstacleY, obstacleWidth, obstacleHeight);
+        }
+        
+        function drawScore() {
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 25);
+        }
+        
+        function collisionDetection() {
+            if (dinoX < obstacleX + obstacleWidth &&
+                dinoX + dinoWidth > obstacleX &&
+                dinoY < obstacleY + obstacleHeight &&
+                dinoY + dinoHeight > obstacleY) {
+                return true;
+            }
+            return false;
+        }
+        
+        function showGameOverScreen() {
+            gameOverScreen.style.display = 'block';
+            scoreDisplay.textContent = score;
+        }
+        
+        function playAgain() {
+            location.reload();
+        }
+        
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!gameOver) {
+                // Update obstacle position
+                obstacleX -= gameSpeed;
+                
+                // Check collision
+                if (collisionDetection()) {
+                    gameOver = true;
+                    showGameOverScreen();
+                }
+                
+                // Update score
+                if (obstacleX < 0) {
+                    score++;
+                    obstacleX = canvas.width;
+                }
+                
+                drawDinosaur();
+                drawObstacle();
+                drawScore();
+                
+                requestAnimationFrame(update);
+            }
+        }
+        
+        update();
+    </script>
+</body>
+</html>
